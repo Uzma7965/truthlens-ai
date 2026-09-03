@@ -119,11 +119,10 @@ export default function App() {
         currentView={currentView}
       />
 
-      {/* Main content uses the available laptop/desktop width while retaining
-          generous readable margins on very large screens. */}
-      <main className="flex-1 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-5 sm:py-8">
+      {/* Use the full laptop/desktop canvas; inner content only keeps modest readable margins. */}
+      <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-5 sm:py-8">
         {currentView === 'home' && (
-          <div className="w-full max-w-[1200px] mx-auto space-y-6 animate-in fade-in duration-300">
+          <div className="w-full max-w-[1440px] mx-auto space-y-6 animate-in fade-in duration-300">
             <div className="text-center pt-2 sm:pt-6 pb-1 space-y-3">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-[#1C1F17] border border-[#2B2F24] rounded-full text-[11px] font-mono text-[#A6AC9F] mb-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#FE813C]"></span>
