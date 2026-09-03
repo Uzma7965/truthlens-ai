@@ -11,7 +11,6 @@ export async function fetchInvestigation(
     throw new Error('Please enter a claim to investigate.');
   }
 
-  // 6 investigation phases matching the pipeline
   const stages = [
     { index: 0, msg: 'Decomposing claim into testable subclaims & entities...' },
     { index: 1, msg: 'Generating targeted Google Search & News queries...' },
@@ -22,26 +21,43 @@ export async function fetchInvestigation(
   ];
 
   let currentStage = 0;
-  if (onStageUpdate) {
-    onStageUpdate(0, stages[0].msg);
-  }
+  if (onStageUpdate) onStageUpdate(0, stages[0].msg);
 
-  // Incrementally advance visual stages while the backend query is in flight
   const interval = setInterval(() => {
     if (currentStage < stages.length - 1) {
       currentStage += 1;
-      if (onStageUpdate) {
-        onStageUpdate(stages[currentStage].index, stages[currentStage].msg);
-      }
+      if (onStageUpdate) onStageUpdate(stages[currentStage].index, stages[currentStage].msg);
     }
   }, 1200);
 
   try {
-    const response = await fetch('/api/investigate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ claim: trimmed }),
-    });
+    let response: Response | null = null;
+    let lastNetworkError: unknown = null;
+
+    // Render can briefly close an in-flight connection during a deployment/restart.
+    // Retry network-level failures so the user does not get a false "Failed to fetch" error.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        response = await fetch('/api/investigate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ claim: trimmed }),
+        });
+        break;
+      } catch (error) {
+        lastNetworkError = error;
+        if (attempt < 2) {
+          if (onStageUpdate) onStageUpdate(2, 'Reconnecting to the live investigation server...');
+          await new Promise((resolve) => setTimeout(resolve, 1800 * (attempt + 1)));
+        }
+      }
+    }
+
+    if (!response) {
+      throw lastNetworkError instanceof Error
+        ? lastNetworkError
+        : new Error('The live investigation server could not be reached.');
+    }
 
     clearInterval(interval);
 
@@ -52,9 +68,7 @@ export async function fetchInvestigation(
 
     const data: Investigation = await response.json();
 
-    if (onStageUpdate) {
-      onStageUpdate(5, 'Synthesizing evidence-grounded assessment...');
-    }
+    if (onStageUpdate) onStageUpdate(5, 'Synthesizing evidence-grounded assessment...');
 
     saveToHistory(data);
     return data;
@@ -78,16 +92,12 @@ export async function challengeVerdict(
   ];
 
   let currentStep = 0;
-  if (onStepUpdate) {
-    onStepUpdate(0, steps[0]);
-  }
+  if (onStepUpdate) onStepUpdate(0, steps[0]);
 
   const interval = setInterval(() => {
     if (currentStep < steps.length - 1) {
       currentStep += 1;
-      if (onStepUpdate) {
-        onStepUpdate(currentStep, steps[currentStep]);
-      }
+      if (onStepUpdate) onStepUpdate(currentStep, steps[currentStep]);
     }
   }, 1400);
 
@@ -117,9 +127,7 @@ export async function challengeVerdict(
 export function getHistory(): Investigation[] {
   try {
     const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
-    if (!raw) {
-      return [];
-    }
+    if (!raw) return [];
     return JSON.parse(raw);
   } catch (e) {
     console.error('Failed to load history from localStorage:', e);
