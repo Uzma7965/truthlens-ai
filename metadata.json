@@ -1,0 +1,6 @@
+{
+  "name": "TruthLens",
+  "description": "AI-powered claim investigation engine that evaluates statements against multi-source evidence.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

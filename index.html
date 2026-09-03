@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function() {
+        try {
+          var currentFetch = window.fetch ? window.fetch.bind(window) : null;
+          Object.defineProperty(window, 'fetch', {
+            get: function() {
+              return currentFetch;
+            },
+            set: function(fn) {
+              currentFetch = fn;
+            },
+            configurable: true,
+            enumerable: true
+          });
+        } catch (e) {
+          /* ignore */
+        }
+        // Filter benign HMR WebSocket reconnection notices in sandboxed preview iframe
+        try {
+          var origError = console.error;
+          console.error = function() {
+            var first = arguments[0];
+            if (typeof first === 'string' && (first.indexOf('[vite] failed to connect to websocket') !== -1 || first.indexOf('WebSocket') !== -1)) {
+              return;
+            }
+            origError.apply(console, arguments);
+          };
+          window.addEventListener('error', function(event) {
+            if (event.message && (event.message.indexOf('WebSocket') !== -1 || event.message.indexOf('failed to connect to websocket') !== -1)) {
+              event.stopImmediatePropagation();
+              event.preventDefault();
+            }
+          }, true);
+        } catch (e) {
+          /* ignore */
+        }
+      })();
+    </script>
+    <title>TruthLens — AI Claim Investigation Engine</title>
+    <meta name="description" content="TruthLens searches the live web and compares evidence to help you understand what a claim actually supports." />
+    <meta property="og:title" content="TruthLens — AI Claim Investigation Engine" />
+    <meta property="og:description" content="TruthLens searches the live web and compares evidence to help you understand what a claim actually supports." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  </head>
+  <body class="bg-[#0E0F0B] text-[#FFFFFF] antialiased selection:bg-[#FE813C] selection:text-[#0E0F0B]">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
